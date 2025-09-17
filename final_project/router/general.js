@@ -29,56 +29,107 @@ public_users.post("/register", (req, res) => {
 
 
 // Get the book list available in the shop
-public_users.get('/', function (req, res) {
-    res.status(200).json({
-        books: books
-    });
-});
+//public_users.get('/', function (req, res) {
+//    res.status(200).json({
+//        books: books
+//    });
+//});
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn', function (req, res) {
-    const isbn = req.params.isbn;
 
-    // Usa Object.values per ottenere un array di libri e poi filtra quelli con l'ISBN corrispondente
-    const booksFiltered = Object.values(books).filter(b => b.ISBN === isbn);
-
-    if (booksFiltered.length === 0) {
-        return res.status(404).json({ message: "Book not found" });
+public_users.get('/', async (req, res) => {
+    try {
+      // Simulo una chiamata asincrona restituendo i libri
+      const data = await new Promise((resolve) => {
+        setTimeout(() => resolve(books), 100); // finto delay
+      });
+      return res.status(200).send(JSON.stringify(data, null, 2));
+    } catch (err) {
+      return res.status(500).json({ message: 'Errore nel recupero dei libri', error: err.message });
     }
-
-    // Restituisce il primo libro trovato (o l'intero array se preferisci)
-    return res.status(200).json(booksFiltered[0]);
-});
+  });
+  
 
 
-// Get book details based on author
-public_users.get('/author/:author', function (req, res) {
-    const author = req.params.author;
 
-    const authorFiltered = Object.values(books).filter(b => b.author.toLowerCase() === author.toLowerCase());
-
-    if (authorFiltered.length === 0) {
-        return res.status(404).json({ message: "Author not found" });
+// Get book details based on ISBN (async/await version - Task 11)
+public_users.get('/isbn/:isbn', async (req, res) => {
+    try {
+      const isbn = req.params.isbn;
+  
+      // Simulo una chiamata asincrona (potrebbe essere una query DB o chiamata API)
+      const book = await new Promise((resolve) => {
+        setTimeout(() => {
+          const found = Object.values(books).find(b => b.ISBN === isbn);
+          resolve(found);
+        }, 100);
+      });
+  
+      if (!book) {
+        return res.status(404).json({ message: `Book with ISBN ${isbn} not found` });
+      }
+  
+      return res.status(200).json(book);
+    } catch (err) {
+      return res.status(500).json({
+        message: 'Errore nel recupero dei dettagli del libro',
+        error: err.message
+      });
     }
-
-    //Restituisce i libri dell'autore
-    return res.status(200).json(authorFiltered);
-});
-
-
-// Get all books based on title
-public_users.get('/title/:title', function (req, res) {
-    const title = req.params.title;
-
-    const titleFiltered = Object.values(books).filter(b => b.title.toLowerCase() === title.toLowerCase());
-
-    if (titleFiltered.length === 0) {
-        return res.status(404).json({ message: "Title not found" });
+  });
+  
+// Get book details based on author (async/await version - Task 12)
+public_users.get('/author/:author', async (req, res) => {
+    try {
+      const author = req.params.author;
+        const booksByAuthor = await new Promise((resolve) => {
+        setTimeout(() => {
+          const filtered = Object.values(books).filter(
+            b => b.author.toLowerCase() === author.toLowerCase()
+          );
+          resolve(filtered);
+        }, 100);
+      });
+  
+      if (booksByAuthor.length === 0) {
+        return res.status(404).json({ message: `No books found by author ${author}` });
+      }
+  
+      return res.status(200).json(booksByAuthor);
+    } catch (err) {
+      return res.status(500).json({
+        message: 'Errore nel recupero dei libri per autore',
+        error: err.message
+      });
     }
+  });
+  
 
-    //Restituisce i libri dell'autore
-    return res.status(200).json(titleFiltered);
-});
+
+public_users.get('/title/:title', async (req, res) => {
+    try {
+      const title = req.params.title;
+      const booksByTitle = await new Promise((resolve) => {
+        setTimeout(() => {
+          const filtered = Object.values(books).filter(
+            b => b.title.toLowerCase() === title.toLowerCase()
+          );
+          resolve(filtered);
+        }, 100);
+      });
+  
+      if (booksByTitle.length === 0) {
+        return res.status(404).json({ message: `No books found with title ${title}` });
+      }
+  
+      return res.status(200).json(booksByTitle);
+    } catch (err) {
+      return res.status(500).json({
+        message: 'Errore nel recupero dei libri per titolo',
+        error: err.message
+      });
+    }
+  });
+  
 
 // Get book review based on ISBN
 public_users.get('/review/:isbn', function (req, res) {
